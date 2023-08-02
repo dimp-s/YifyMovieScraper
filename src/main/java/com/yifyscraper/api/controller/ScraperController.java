@@ -16,8 +16,13 @@ public class ScraperController {
     @Autowired
     ScraperService scraperService;
 
-    @GetMapping()
+    @GetMapping("/getAll")
     public Set<ResponseDTO> getMovies(){
         return scraperService.getMovies();
+    }
+
+    @GetMapping(path = "/popular")
+    public void getPopularMovie(){
+        scraperService.getPopularMovie();
     }
 }

@@ -7,5 +7,6 @@ import com.yifyscraper.api.model.ResponseDTO;
 public interface ScraperService {
     
     Set<ResponseDTO> getMovies();
+    void getPopularMovie();
 
 }
