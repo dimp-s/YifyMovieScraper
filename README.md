@@ -6,7 +6,8 @@ Made using java springboot and the Jsoup library for scraping.
 After cloning and running the project, you can test the following apis using your preferred api request app or your browser for now:
 
 - localhost:[PORT]/getAll -> To get all currently trending movies.
-- localhost:[PORT]/popular -> To download the torrentfile for the topmost popular movie.
+- localhost:[PORT]/popular -> To download the torrentfile for the topmost trending movie.
+- localhost:[PORT]/getAllPopular -> To download the torrentfile for all trending movies.
 
 **NOTES**
 
