@@ -7,10 +7,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -33,51 +34,78 @@ public class ScraperServiceImpl implements ScraperService{
     private Environment env;
 
     @Override
-    public Set<ResponseDTO> getMovies() {
-        Set<ResponseDTO> responseDTOs = new HashSet<>();
+    public List<ResponseDTO> getMovies() {
+        List<ResponseDTO> responseDTOs = new ArrayList<>();
         extractDataFromYify(responseDTOs);
+        //return sorted list [sorted by rating]
+        responseDTOs.sort(Comparator.comparingDouble(ResponseDTO::getRating).reversed());
         return responseDTOs;
     }
 
     @Override
     public void getPopularMovie() {
         //get list of all popularmovies and select the first one
-        Set<ResponseDTO> popularMovies = getMovies();
+        List<ResponseDTO> popularMovies = getMovies();
         ResponseDTO popularMovie = popularMovies.iterator().next();
-        try {
-            Document document = Jsoup.connect(popularMovie.getUrl()).get();
-
-            //select all elements of the mentioned class and pick the first one
-            Elements elements = document.getElementsByClass("download-torrent button-green-download2-big");
-            Element hdLink720 = elements.first();
-
-            //from the first one get the movie link using the "href" attribute key and pass it to download method along with "popularmovie"
-            String url = hdLink720.attr("href");
-            downloadMovieFile(url,popularMovie);
-     } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String url = downloadLink(popularMovie);
+        downloadMovieFile(url,popularMovie);
     }
     
+    @Override
+    public void getAllTorrents() {
+        List<ResponseDTO> popularMovies = getMovies();
+            for(ResponseDTO popularMovie: popularMovies){    
+                //from the first one get the movie link using the "href" attribute key and pass it to download method along with "popularmovie"
+                String url = downloadLink(popularMovie);
+                downloadMovieFile(url,popularMovie);
+            }
+    }
+
     //method to extract title and movie detail from yify
-    private void extractDataFromYify(Set<ResponseDTO> responseDTOs) {
+    private void extractDataFromYify(List<ResponseDTO> responseDTOs) {
         try{
             String url = env.getProperty("website.url");
             Document document = Jsoup.connect(url).get();
-            //select elements which contains the list of movies
-            Elements elements = document.getElementsByClass("browse-movie-title");
+            
+            // Find all elements from the div containing movie information
+            Elements movieElements = document.select("div.browse-movie-wrap");
 
-            for(Element item: elements){
-                ResponseDTO responseDTO = new ResponseDTO();
-                if(StringUtils.isNotEmpty(item.attr("href"))){
-                    //map data to model
-                    responseDTO.setUrl(item.attr("href"));
-                    responseDTO.setTitle(item.text());
+            // Loop through each movie element and extract the information
+            for (Element movieElement : movieElements) {
+                //a element with class "browse-movie-link" for movie url
+                Element movieLink = movieElement.selectFirst("a.browse-movie-link");
+
+                //a element with class "browse-movie-title" for movie name
+                Element movieTitleElement = movieElement.selectFirst("a.browse-movie-title");
+
+                //h4 element with class rating for movie rating
+                Element ratingElement = movieElement.selectFirst("h4.rating");
+
+                String movieName = movieTitleElement.text();
+
+                //extract the link present in href attribute of movieTitleElement
+                String link = movieLink.attr("href");
+                String rating;
+
+                //set rating to 0 if not present
+                if(ratingElement != null)
+                    rating = ratingElement.text();
+                else
+                    rating = "0 / 10";
+                
+                //since rating is a string with format "0 / 10" split and parse value to double
+                double ratingToDouble = Double.parseDouble(rating.split("/")[0].trim());
+
+                // Create the MovieDTO object and set the extracted values
+                ResponseDTO movie= new ResponseDTO();
+                movie.setTitle(movieName);
+                movie.setUrl(link);
+                movie.setRating(ratingToDouble);
+
+                if(movie.getUrl() != null){
+                    responseDTOs.add(movie);
                 }
-                if(responseDTO.getUrl() != null){
-                    responseDTOs.add(responseDTO);
-                }
-            }
+        }
         }catch(IOException err){
             err.printStackTrace();
         }
@@ -91,7 +119,6 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
 
         // Create HttpClient
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        System.out.println(popularMovie.getUrl());
 
         // Create HttpGet request with headers
         HttpGet httpGet = new HttpGet(url);
@@ -129,7 +156,7 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
                 }
                 
                 //assign a unique name for each file being downloaded by appending the timestamp to avoid duplicate issue.
-                String movieName = popularMovie.getTitle();
+                String movieName = sanitizeMovieName(popularMovie.getTitle());
                 String timestamp = String.valueOf(System.currentTimeMillis());
                 String fileName = movieName + "_" + timestamp + ".torrent";
 
@@ -154,6 +181,30 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
     } catch (IOException err) {
         err.printStackTrace();
     }
+}
+
+//get 720pdownload link
+private String downloadLink(ResponseDTO responseDTO){
+    String url = "";
+    try{
+        Document document = Jsoup.connect(responseDTO.getUrl()).get();
+
+        //select all elements of the mentioned class and pick the first one
+        Elements elements = document.getElementsByClass("download-torrent button-green-download2-big");
+        Element hdLink720 = elements.first();
+            
+        //from the first one get the 720p movie download link using the "href" attribute key and pass it to download method along with "popularmovie"
+        url = hdLink720.attr("href");
+    }catch(IOException err){
+        err.printStackTrace();
+    }
+    return url;
+}
+
+
+//sanitize movie name to replace invalid characters with "_" during file creation
+private static String sanitizeMovieName(String movieName) {
+    return movieName.replaceAll("[^a-zA-Z0-9.-]", "_");
 }
 
 }

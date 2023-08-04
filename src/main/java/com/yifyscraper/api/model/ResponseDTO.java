@@ -6,4 +6,5 @@ import lombok.Data;
 public class ResponseDTO {
     String title;
     String url;
+    Double rating;
 }
