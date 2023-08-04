@@ -26,3 +26,5 @@ download.directory = C:/PopularMovies (location to store the downloaded files)
 ```
 
 Thanks!
+
+Also, special thanks to NCCS for providing me the platform and also wanna thank my supervisor Mr. Ramesh Rimal for guiding me throughout the project.
