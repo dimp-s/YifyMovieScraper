@@ -1,7 +1,7 @@
 # YifyMovieScraper
 
 Hi. This web app helps you download the torrents for trending movies from the [yify-movies](yts.mx) website.
-Made using java springboot. Thanks.
+Made using java springboot and the Jsoup library for scraping.
 
 After cloning and running the project, you can test the following apis using your preferred api request app or your browser for now:
 
@@ -12,5 +12,16 @@ After cloning and running the project, you can test the following apis using you
 
 - All torrent files are downloaded at 720p quality!
 - Website likely to be inaccessible in some countries since piracy is illegal!
+
+The application.properties file contain all the env variables used
+
+### application.properties
+
+```
+server.port = 8000
+website.url = https://yts.mx/trending-movies (host website)
+download.directory = C:/PopularMovies (location to store the downloaded files)
+
+```
 
 Thanks!

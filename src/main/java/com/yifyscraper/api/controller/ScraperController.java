@@ -1,6 +1,6 @@
 package com.yifyscraper.api.controller;
 
-import java.util.Set;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +17,17 @@ public class ScraperController {
     ScraperService scraperService;
 
     @GetMapping("/getAll")
-    public Set<ResponseDTO> getMovies(){
+    public List<ResponseDTO> getMovies(){
         return scraperService.getMovies();
     }
 
     @GetMapping(path = "/popular")
     public void getPopularMovie(){
         scraperService.getPopularMovie();
+    }
+
+    @GetMapping(path = "/getAllPopular")
+    public void getAllPopularMovies(){
+        scraperService.getAllTorrents();
     }
 }
