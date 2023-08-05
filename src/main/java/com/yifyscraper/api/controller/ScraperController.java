@@ -38,7 +38,7 @@ public class ScraperController {
     }
 
     // Schedule the "/popular" and "/topThree" methods to run every Friday at 16:00 [MOVIE_NIGHT]
-    @Scheduled(cron = "0 0 16 ? * FRI *")
+    @Scheduled(cron = "0 0 16 ? * FRI")
     public void movieSchedular(){
         getTopThreeTrending();
     }
