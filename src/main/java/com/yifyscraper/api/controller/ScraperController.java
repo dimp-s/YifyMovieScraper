@@ -3,6 +3,7 @@ package com.yifyscraper.api.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,8 +27,19 @@ public class ScraperController {
         scraperService.getPopularMovie();
     }
 
+    @GetMapping(path = "/topThree")
+    public void getTopThreeTrending(){
+        scraperService.getTopThreeTrending();
+    }
+
     @GetMapping(path = "/getAllPopular")
     public void getAllPopularMovies(){
         scraperService.getAllTorrents();
+    }
+
+    // Schedule the "/popular" and "/topThree" methods to run every Friday at 16:00 [MOVIE_NIGHT]
+    @Scheduled(cron = "0 0 16 ? * FRI *")
+    public void movieSchedular(){
+        getTopThreeTrending();
     }
 }

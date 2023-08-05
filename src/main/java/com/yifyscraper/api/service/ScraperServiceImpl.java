@@ -1,5 +1,6 @@
 package com.yifyscraper.api.service;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.awt.Desktop;
 
 
 import org.apache.http.HttpHeaders;
@@ -47,7 +49,7 @@ public class ScraperServiceImpl implements ScraperService{
         //get list of all popularmovies and select the first one
         List<ResponseDTO> popularMovies = getMovies();
         ResponseDTO popularMovie = popularMovies.iterator().next();
-        String url = downloadLink(popularMovie);
+        String url = getDownloadLink(popularMovie);
         downloadMovieFile(url,popularMovie);
     }
     
@@ -56,9 +58,19 @@ public class ScraperServiceImpl implements ScraperService{
         List<ResponseDTO> popularMovies = getMovies();
             for(ResponseDTO popularMovie: popularMovies){    
                 //from the first one get the movie link using the "href" attribute key and pass it to download method along with "popularmovie"
-                String url = downloadLink(popularMovie);
+                String url = getDownloadLink(popularMovie);
                 downloadMovieFile(url,popularMovie);
             }
+    }
+
+    @Override
+    public void getTopThreeTrending() {
+        List<ResponseDTO> popularMovies = getMovies();
+        for(int i = 0 ; i < 3; i++){
+            ResponseDTO movie = popularMovies.get(i);
+            String url = getDownloadLink(movie);
+            downloadMovieFile(url, movie);
+        }
     }
 
     //method to extract title and movie detail from yify
@@ -177,14 +189,36 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
                 outputStream.close();
             // Ensure the response entity is fully consumed to release the connection
             EntityUtils.consume(response.getEntity());
+            openUTorentWeb(filePath.toString());
         }
     } catch (IOException err) {
         err.printStackTrace();
     }
 }
 
+private void openUTorentWeb(String filePath) {
+    try {
+        File torrentFile = new File(filePath);
+        if(!torrentFile.exists()){
+            return;
+        }
+        if(Desktop.isDesktopSupported()){
+        Desktop desktop = Desktop.getDesktop();
+            if(desktop.isSupported(Desktop.Action.OPEN)){
+                desktop.open(torrentFile);
+            }else{
+                System.out.println("This file is not supported");
+            }
+        } else{
+            System.out.println("Desktop isnt supported!");
+    }
+    } catch (IOException err) {
+        err.printStackTrace();
+    }
+}
+
 //get 720pdownload link
-private String downloadLink(ResponseDTO responseDTO){
+private String getDownloadLink(ResponseDTO responseDTO){
     String url = "";
     try{
         Document document = Jsoup.connect(responseDTO.getUrl()).get();
