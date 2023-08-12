@@ -8,6 +8,8 @@ After cloning and running the project, you can test the following apis using you
 - localhost:[PORT]/getAll -> To get all currently trending movies.
 - localhost:[PORT]/popular -> To download the torrentfile for the topmost trending movie.
 - localhost:[PORT]/getAllPopular -> To download the torrentfile for all trending movies.
+- localhost:[PORT]/topThree -> To download the torrentfile for top 3 trending movies. [Cron scheduling enables to process request every Friday evening. Movie night!]
+- localhost:[PORT]/one -> To download the selected movie.
 
 **NOTES**
 
