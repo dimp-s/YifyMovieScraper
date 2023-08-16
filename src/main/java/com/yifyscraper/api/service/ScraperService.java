@@ -11,5 +11,6 @@ public interface ScraperService {
     void getPopularMovie();
     void getAllTorrents();
     void getTopThreeTrending();
+    void getOne(ResponseDTO reqDto);
 
 }

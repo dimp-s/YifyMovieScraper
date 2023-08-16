@@ -49,17 +49,19 @@ public class ScraperServiceImpl implements ScraperService{
         //get list of all popularmovies and select the first one
         List<ResponseDTO> popularMovies = getMovies();
         ResponseDTO popularMovie = popularMovies.iterator().next();
-        String url = getDownloadLink(popularMovie);
-        downloadMovieFile(url,popularMovie);
+        String movieUrl = popularMovie.getUrl();
+        String downloadUrl = getDownloadLink(movieUrl);
+        downloadMovieFile(movieUrl,downloadUrl,popularMovie.getTitle());
     }
     
     @Override
     public void getAllTorrents() {
         List<ResponseDTO> popularMovies = getMovies();
             for(ResponseDTO popularMovie: popularMovies){    
+                String movieUrl = popularMovie.getUrl();
                 //from the first one get the movie link using the "href" attribute key and pass it to download method along with "popularmovie"
-                String url = getDownloadLink(popularMovie);
-                downloadMovieFile(url,popularMovie);
+                String downloadUrl = getDownloadLink(movieUrl);
+                downloadMovieFile(movieUrl,downloadUrl,popularMovie.getTitle());
             }
     }
 
@@ -68,9 +70,16 @@ public class ScraperServiceImpl implements ScraperService{
         List<ResponseDTO> popularMovies = getMovies();
         for(int i = 0 ; i < 3; i++){
             ResponseDTO movie = popularMovies.get(i);
-            String url = getDownloadLink(movie);
-            downloadMovieFile(url, movie);
+            String movieUrl = movie.getUrl();
+            String downloadUrl = getDownloadLink(movieUrl);
+            downloadMovieFile(movieUrl,downloadUrl, movie.getTitle());
         }
+    }
+
+    @Override
+    public void getOne(ResponseDTO reqDto) {
+        String downloadUrl = getDownloadLink(reqDto.getUrl());
+        downloadMovieFile(reqDto.getUrl(), downloadUrl, reqDto.getTitle());
     }
 
     //method to extract title and movie detail from yify
@@ -124,7 +133,7 @@ public class ScraperServiceImpl implements ScraperService{
 }
 
 //method to download the torrent file from passed movie
-private void downloadMovieFile(String url, ResponseDTO popularMovie){
+private void downloadMovieFile(String movieUrl, String downloadUrl, String title){
     try {
         // Set the request headers
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188";
@@ -133,13 +142,13 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
         // Create HttpGet request with headers
-        HttpGet httpGet = new HttpGet(url);
+        HttpGet httpGet = new HttpGet(downloadUrl);
         httpGet.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpGet.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
         httpGet.setHeader("Accept-Encoding", "gzip, deflate, br");
         httpGet.setHeader("Accept-Language", "en-GB,en;q=0.9,en-US;q=0.8");
         httpGet.setHeader("Cookie", "cf_clearance=9I8SoAsuz.XwN63xlQ.j._IIC1cpXUDzoozITr3B08Y-1690557403-0-0.2.1690557403; eplod=4; PHPSESSID=mm6u18e1gub6kp5b257lmqkgmg");
-        httpGet.setHeader("Referer", popularMovie.getUrl());
+        httpGet.setHeader("Referer", movieUrl);
         httpGet.setHeader("Sec-Ch-Ua", "\"Not/A)Brand\";v=\"99\", \"Microsoft Edge\";v=\"115\", \"Chromium\";v=\"115\"");
         httpGet.setHeader("Sec-Ch-Ua-Mobile", "?0");
         httpGet.setHeader("Sec-Ch-Ua-Platform", "\"Windows\"");
@@ -168,7 +177,7 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
                 }
                 
                 //assign a unique name for each file being downloaded by appending the timestamp to avoid duplicate issue.
-                String movieName = sanitizeMovieName(popularMovie.getTitle());
+                String movieName = sanitizeMovieName(title);
                 String timestamp = String.valueOf(System.currentTimeMillis());
                 String fileName = movieName + "_" + timestamp + ".torrent";
 
@@ -189,14 +198,14 @@ private void downloadMovieFile(String url, ResponseDTO popularMovie){
                 outputStream.close();
             // Ensure the response entity is fully consumed to release the connection
             EntityUtils.consume(response.getEntity());
-            openUTorentWeb(filePath.toString());
+            openUTorrentWeb(filePath.toString());
         }
     } catch (IOException err) {
         err.printStackTrace();
     }
 }
 
-private void openUTorentWeb(String filePath) {
+private void openUTorrentWeb(String filePath) {
     try {
         File torrentFile = new File(filePath);
         if(!torrentFile.exists()){
@@ -218,21 +227,21 @@ private void openUTorentWeb(String filePath) {
 }
 
 //get 720pdownload link
-private String getDownloadLink(ResponseDTO responseDTO){
-    String url = "";
+private String getDownloadLink(String url){
+    String downloadUrl = "";
     try{
-        Document document = Jsoup.connect(responseDTO.getUrl()).get();
+        Document document = Jsoup.connect(url).get();
 
         //select all elements of the mentioned class and pick the first one
         Elements elements = document.getElementsByClass("download-torrent button-green-download2-big");
         Element hdLink720 = elements.first();
             
         //from the first one get the 720p movie download link using the "href" attribute key and pass it to download method along with "popularmovie"
-        url = hdLink720.attr("href");
+        downloadUrl = hdLink720.attr("href");
     }catch(IOException err){
         err.printStackTrace();
     }
-    return url;
+    return downloadUrl;
 }
 
 
@@ -240,5 +249,4 @@ private String getDownloadLink(ResponseDTO responseDTO){
 private static String sanitizeMovieName(String movieName) {
     return movieName.replaceAll("[^a-zA-Z0-9.-]", "_");
 }
-
 }
