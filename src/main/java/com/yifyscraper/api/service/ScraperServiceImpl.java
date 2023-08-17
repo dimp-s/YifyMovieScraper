@@ -77,9 +77,9 @@ public class ScraperServiceImpl implements ScraperService{
     }
 
     @Override
-    public void getOne(ResponseDTO reqDto) {
-        String downloadUrl = getDownloadLink(reqDto.getUrl());
-        downloadMovieFile(reqDto.getUrl(), downloadUrl, reqDto.getTitle());
+    public void getOne(String name, String url) {
+        String downloadUrl = getDownloadLink(url);
+        downloadMovieFile(url, downloadUrl, name);
     }
 
     //method to extract title and movie detail from yify

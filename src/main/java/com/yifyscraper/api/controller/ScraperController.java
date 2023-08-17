@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yifyscraper.api.model.ResponseDTO;
@@ -39,9 +39,13 @@ public class ScraperController {
     }
 
     @GetMapping(path = "/one")
-    public void getOne(@RequestBody ResponseDTO reqDto){
-        scraperService.getOne(reqDto);
-    }
+    public void getOne(
+        @RequestParam String title,
+        @RequestParam String url
+    ) {
+    scraperService.getOne(title, url);
+}
+
 
 
     // Schedule the "/popular" and "/topThree" methods to run every Friday at 16:00 [MOVIE_NIGHT]
